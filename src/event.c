@@ -5,6 +5,7 @@
 #include "color.h"
 #include "event.h"
 
+
 Event* addEvent(Event *head)
 {
     Event *newnode = NULL;
@@ -33,15 +34,16 @@ Event* addEvent(Event *head)
     str[strcspn(str,"\n")]='\0';
     strcpy(newnode->description,str);
     // Add at first
-    if(head==NULL)
+    Event *temp=head;
+    if(temp==NULL)
     {
-        head=newnode;
+        return newnode;
     }
-    else
+    while(temp->next!=NULL)
     {
-        newnode->next=head;
-        head=newnode;
+            temp=temp->next;
     }
+    temp->next=newnode;
     return head;
 }
 
@@ -61,9 +63,47 @@ Event* deleteEvent(Event *head)
     return head;
 }
 
+Event *sortNodes(Event *head)
+{
+        int swapped;
+        if(head == NULL || head ->next==NULL)
+               return head;
+        while(1)
+        {
+                Event *cur=head;
+                Event *prev=NULL;
+                swapped=0;
+                while(cur->next)
+                {
+                        Event *run=cur->next;
+                        if((cur->year > run->year) ||
+                 (cur->year == run->year && cur->month > run->month) ||
+                 (cur->year == run->year && cur->month == run->month &&
+                  cur->day > run->day) )
+                        {
+                                cur->next=run->next;
+                                run->next=cur;
+                                if(prev == NULL)
+                                        prev=head;
+                                else
+                                        prev->next=cur;
+                                prev=cur;
+                                swapped = 1;
+                        }
+                        else
+                        {
+                                prev=cur;
+                                cur=cur->next;
+                        }
+                }
+                        if(!swapped)
+                                break;
+        }
+        return head;
+
+}
 void saveEventsToFile(Event *ptr,const char*filename)
 {
-    int size=sizeof(Event)-sizeof(Event*);
     FILE *fp=fopen(filename,"w");
     if(ptr==NULL)
     {
@@ -71,51 +111,57 @@ void saveEventsToFile(Event *ptr,const char*filename)
     }
     else
     {
+        //ptr=sortNodes(ptr);
         while(ptr)
         {
-            fwrite(ptr,size,1,fp);
-            ptr=ptr->next;
+                fwrite(ptr->Title, sizeof(ptr->Title), 1, fp);
+                fwrite(&ptr->day, sizeof(int), 1, fp);
+                fwrite(&ptr->month, sizeof(int), 1, fp);
+                fwrite(&ptr->year, sizeof(int), 1, fp);
+                fwrite(ptr->description, sizeof(ptr->description), 1, fp);
+                ptr=ptr->next;
         }
     }
     printf(GREEN BOLD "Events are Saved succesfully\n");
     fclose(fp);
 }
 
-void syncEventsFromFile(Event **head,const char*filename)
+void syncEventsFromFile(Event **head, const char *filename)
 {
-    int size=sizeof(Event)-sizeof(Event*);
-    Event demo,*temp,*node;
-    FILE *fp=fopen(filename,"r");
-    if(fp==NULL)
+    FILE *fp = fopen(filename, "rb");
+    if (!fp)
     {
-        perror("File not open\n");
+        perror("File not open");
+        return;
     }
-    else
+
+    *head = NULL;   // 
+    Event *temp = NULL;
+
+    while (1)
     {
-        while(fread(&demo,size,1,fp))
+        Event *node = malloc(sizeof(Event));
+        if (!node) break;
+
+        if (fread(node->Title, sizeof(node->Title), 1, fp) != 1) break;
+        fread(&node->day, sizeof(int), 1, fp);
+        fread(&node->month, sizeof(int), 1, fp);
+        fread(&node->year, sizeof(int), 1, fp);
+        fread(node->description, sizeof(node->description), 1, fp);
+
+        node->next = NULL;   // 
+
+        if (*head == NULL)
+            *head = temp = node;
+        else
         {
-            node=malloc(sizeof(struct Event));
-            strcpy(node->Title,demo.Title);
-            node->day=demo.day;
-            node->month=demo.month;
-            node->year=demo.year;
-            strcpy(node->description,demo.description);
-            if(*head == NULL)
-            {
-                *head=node;
-            }
-            else
-            {
-                temp=*head;
-                while(temp->next)
-                {
-                    temp=temp->next;
-                }
-                temp->next=node;
-            }
+            temp->next = node;
+            temp = node;
         }
-        printf(GREEN BOLD "Events are Retrived succesfully\n");
     }
+
+    fclose(fp);
+    printf(GREEN BOLD "Events are Retrieved successfully\n");
 }
 
 void displaymenu()
