@@ -95,10 +95,10 @@ void displayCalender(Event *head,int month,int year)
 void viewAllSavedEvents(Event *head)
 {
     Event *temp = head;
-    int found = 0;
+    if(head== NULL)
+        printf("No events this month.\n");
     while (temp)
     {
-            found=1;
         printf("\n" HR "\n");
         printf(BOLD CYAN "Title          : " RESET "%s\n", temp->Title);
         printf(BOLD CYAN "Date           : " RESET "%02d/%02d/%04d\n", temp->day, temp->month, temp->year);
@@ -106,8 +106,6 @@ void viewAllSavedEvents(Event *head)
         temp = temp->next;
     }
         printf(HR "\n");
-        if (!found)
-        printf("No events this month.\n");
 }
 
 
