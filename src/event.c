@@ -111,7 +111,7 @@ void saveEventsToFile(Event *ptr,const char*filename)
     }
     else
     {
-        //ptr=sortNodes(ptr);
+        ptr=sortNodes(ptr);
         while(ptr)
         {
                 fwrite(ptr->Title, sizeof(ptr->Title), 1, fp);
@@ -180,3 +180,4 @@ void displaymenu()
     printf("q/Q : Quit the application\n");
     printf("\n" HR "\n");
 }
+
